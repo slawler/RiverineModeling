@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Jan 23 10:38:22 2016
-
-@author: sml
-"""
 
 # -*- coding: utf-8 -*-
 """
 Created on Tue Nov 24 12:00:26 2015
-Create a grid file for HEC-HMS
+Create a grid file for HEC-HMS, requires some manual editing of .mod file 
 @author: slawler
 """
 '''

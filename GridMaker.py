@@ -8,9 +8,16 @@ Created on Sat Jan 23 10:38:22 2016
 # -*- coding: utf-8 -*-
 """
 Created on Tue Nov 24 12:00:26 2015
-
+Create a grid file for HEC-HMS
 @author: slawler
 """
+'''
+sub1	GridCell	961	545	0.649917
+sub2	GridCell	961	545	2.490273
+sub3	GridCell	959	543	0.000483
+sub4	GridCell	959	543	0.000483
+subname GridCell    coord,coord area (sqkm)
+'''
 
 infile = 'CameronRun_GridMaker.txt'
 outfile= 'CameronRun.mod'

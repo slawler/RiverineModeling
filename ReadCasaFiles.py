@@ -1,8 +1,8 @@
 # -*- coding: utf-8 - Python 2.7.11 *-
 """
-Description:
-Input(s):
-Output(s):
+Description: Read netcdf Precip Files from CASA
+Input(s): .nc files
+Output(s): png files with sample watershed shapefile 
 slawler@dewberry.com
 Created on Tue Apr 19 15:08:33 2016
 """

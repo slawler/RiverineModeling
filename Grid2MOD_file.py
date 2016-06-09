@@ -1,60 +1,42 @@
-
 # -*- coding: utf-8 -*-
 """
 Created on Tue Nov 24 12:00:26 2015
-Create a grid file for HEC-HMS, requires some manual editing of .mod file 
+Create a grid file for HEC-HMS, requires some manual editing of .mod file
 @author: slawler
+
 """
-'''
-sub1	GridCell	961	545	0.649917
-sub2	GridCell	961	545	2.490273
-sub3	GridCell	959	543	0.000483
-sub4	GridCell	959	543	0.000483
-subname GridCell    coord,coord area (sqkm)
-'''
 
-infile = 'CameronRun_GridMaker.txt'
-outfile= 'CameronRun.mod'
-import numpy as np
+import pandas as pd
 
-with open(infile,'r') as f:
-    lines = len(f.readlines())
+infile = 'table.txt'
+outfile= 'HecModel.mod'
+df = pd.read_csv(infile, sep = '\t')
 
-with open(infile,'r') as f:    
-    line = f.readline()
-    data = line.split()
-    firstx = data[0]
-            
-head = 'Subbasin: '
-tail = 'End:'
-blank = '1.00000000000000000'
-space= '     '     
-s = ' '
+sub_list = df.Name.sort_values()
+subs = sub_list.unique()
 
- 
-with open(outfile,'w') as out: 
-    l1 = 'Parameter Order: Xcoord Ycoord TravelLength Area'+'\n'+'End:'+'\n'+'\n'
-    out.write(l1)
+header = 'Parameter Order: Xcoord Ycoord TravelLength Area'
+trvlng = '1.00000000000000000'
+space = ' '
+init = '     GridCell: '
+end = 'End: \n'
+subbasin = 'Subbasin: '
+
+with open('grid.txt','w') as f:
+    for i, s in enumerate(subs):
+        if i == 0:
+            f.write(header + '\n')
+            f.write(end)
+        idx = df.ix[df['Name'] == s].index.tolist()
+        f.write('\n'+subbasin+ s + '\n')
+        for j in idx:
+            basin = df['Name'].iloc[j]
+            x = df['X'].iloc[j]
+            y = df['Y'].iloc[j]
+            a = df['AreaSqKm'].iloc[j]
+            line = init + str(x) +space+ str(y) +space+ trvlng +space+ str(a)
+            f.write(line + '\n')
+        f.write(end)
 
 
-with open(infile,'r') as f:
-    with open(outfile,'a') as out:
-        x = firstx
-        out.write(str(head + x+'\n'))
-        for i in np.arange(0,lines):
-            line = f.readline()
-            data = line.split()
-            line;data
-            y = data[0]
-            if x == data[0]:
-                out.write(str(space+ str(data[1]) + s+\
-                str(data[2])+ s+str(data[3]) +s+blank+ s+\
-                str(data[4])+'\n'))
-            else:
-                out.write(str(tail + '\n'))
-                out.write('\n')
-                out.write(str((head) + str(data[0])+'\n'))
-                x = data[0]
-                out.write(str(space+ str(data[1]) + s+\
-                str(data[2])+ s+str(data[3]) +s+blank+ s+\
-                str(data[4])+'\n'))
+

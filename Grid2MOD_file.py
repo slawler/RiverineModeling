@@ -4,6 +4,23 @@ Created on Tue Nov 24 12:00:26 2015
 Create a grid file for HEC-HMS, requires some manual editing of .mod file
 @author: slawler
 
+Example File:
+
+Parameter Order: Xcoord Ycoord TravelLength Area
+End:
+
+Subbasin: 2C1
+     GridCell: 599 256 0.15554718877992446 0.635893
+     GridCell: 600 256 0.15554718877992446 4.136621
+End:
+
+Subbasin: 2C2
+     GridCell: 599 256 0.15554718877992446 0.497083
+     GridCell: 598 257 0.15554718877992446 0.127391
+     GridCell: 599 257 0.15554718877992446 0.000088
+End:
+
+
 """
 
 import pandas as pd
@@ -22,7 +39,7 @@ init = '     GridCell: '
 end = 'End: \n'
 subbasin = 'Subbasin: '
 
-with open('grid.txt','w') as f:
+with open(outfile,'w') as f:
     for i, s in enumerate(subs):
         if i == 0:
             f.write(header + '\n')

@@ -6,49 +6,106 @@ Output(s)  : .rdb time series files
 slawler@dewberry.com
 Created on Tue Apr 19 15:08:33 2016
 """
-#---------------LOAD PYTHON MODULES-----------------------#
+# Import libraries
 import pandas as pd
-import os, requests
+import requests
+import json
 from datetime import datetime
 from collections import OrderedDict
-#---------------ENTER VARIABLES---------------------------#
-'''
-USGS 01613000 POTOMAC RIVER AT HANCOCK, MD
-USGS 01638500 POTOMAC RIVER AT POINT OF ROCKS, MD
-USGS 01646500 POTOMAC RIVER NEAR WASH, DC LITTLE FALLS PUMP STA
-'''
-PATH      = "/home/slawler/Desktop"           #Download Directory 
 
-gages   = ["01613000","01638500","01646500" ] #Gage List
-start     = datetime(1900, 4, 3,0)            #Start Date
-stop      = datetime(2015, 5, 1,0)            #End Date
-parameter = "00060"                           #Parameter 
-format    = "rdb"                             #Format  
-url       = 'http://waterservices.usgs.gov/nwis/iv'
+# In[ ]:
 
-#----------------------------------------------------------#
-#-----------------------RUN SCRIPT-------------------------#
-#----------------------------------------------------------#
+# Enter Desired Data
+gage       = "02053500"                              # USGS Gage    
 
-#---Loop Through Date Range, Ping URL for data, write data to file      
-for i, gage in enumerate(gages):
-    print("Grabbing Data for USGS Gage: ", gage)
-    first    = datetime.date(start).strftime('%Y-%m-%d')
-    last     =  datetime.date(stop).strftime('%Y-%m-%d')    
-    params = OrderedDict([('format',format),('sites',gage),('startDT',first), 
-                ('endDT',last), ('parameterCD',parameter)])  
+y0, m0 ,d0 = 2016, 10, 6                             # Start date (year, month, day)
+y1, m1 ,d1 = 2016, 10, 13                             # End date
+
+
+#parameter  = ["00060","00065"]                       # Try Flow first    
+parameter  = ["00065","00060"]                       # Try Stage First                    
+dformat    = "json"                                  # Data Format  
+url        = 'http://waterservices.usgs.gov/nwis/iv' # USGS API
+
+
+
+# Create Datetime Objects
+start     = datetime(y0, m0, d0,0)    
+stop      = datetime(y1, m1 ,d1,0)         
+
+# Format Datetime Objects for USGS API
+first    =  datetime.date(start).strftime('%Y-%m-%d')
+last     =  datetime.date(stop).strftime('%Y-%m-%d') 
+
+
+# In[ ]:
+
+# Ping the USGS API for data
+try:
+    params = OrderedDict([('format',dformat),('sites',gage),('startDT',first), 
+                ('endDT',last), ('parameterCD',parameter[0])])  
     
     r = requests.get(url, params = params) 
+    print("\nRetrieved Data for USGS Gage: ", gage)
     data = r.content.decode()
-    newfile = os.path.join(PATH,'%s.txt' % gage)
+    d = json.loads(data)
+    mydict = dict(d['value']['timeSeries'][0])
     
-    with open(newfile,'w') as f: f.write(data)
+except:
+    params = OrderedDict([('format',dformat),('sites',gage),('startDT',first), 
+                ('endDT',last), ('parameterCD',parameter[1])])  
     
-    df = pd.read_csv(newfile, sep = '\t',comment = '#')
-    df.drop(df.index[[0]], inplace = True)
-    df.drop(df.columns[[0,1,3,5]], axis=1,inplace = True)  
-    df = df.set_index('datetime')    
-    df = df.rename(columns = {'01_00060':'flow'}) 
+    r = requests.get(url, params = params) 
+    print("\nRetrieved Data for USGS Gage: ", gage)
+    data = r.content.decode()
+    d = json.loads(data)
+    mydict = dict(d['value']['timeSeries'][0])
+
+if params['parameterCD'] == '00060':
+    obser = "StreamFlow"
+else:
+    obser = "Stage"
     
-     
-         
+    
+# In[ ]:
+
+# Great, We can pull the station name, and assign to a variable for use later:
+SiteName = mydict['sourceInfo']['siteName']
+print('\n', SiteName)
+
+
+# In[ ]:
+
+# After reveiwing the JSON Data structure, select only data we need: 
+tseries = d['value']['timeSeries'][0]['values'][0]['value'][:]
+
+
+# In[ ]:
+
+# Create a Dataframe, format Datetime data,and assign numeric type to observations
+df = pd.DataFrame.from_dict(tseries)
+df.index = pd.to_datetime(df['dateTime'],format='%Y-%m-%d{}%H:%M:%S'.format('T'))
+
+df['UTC Offset'] = df['dateTime'].apply(lambda x: x.split('-')[3][1])
+df['UTC Offset'] = df['UTC Offset'].apply(lambda x: pd.to_timedelta('{} hours'.format(x)))
+
+df.index = df.index - df['UTC Offset']
+df.value = pd.to_numeric(df.value)
+
+# In[ ]:
+
+# Get Rid of unwanted data, rename observed data
+df = df.drop('dateTime', 1)
+df.drop('qualifiers',axis = 1, inplace = True)
+df.drop('UTC Offset',axis = 1, inplace = True)
+df = df.rename(columns = {'value':obser})
+
+print("\nTop Rows: \n", df.head())
+print("\nBottom Rows: \n", df.tail())
+
+# In[ ]:
+
+# Plot the Results, and use the SiteName as a title!
+df.plot(grid = True, title = SiteName)
+
+

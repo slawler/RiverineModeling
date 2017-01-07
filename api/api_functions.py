@@ -1,8 +1,8 @@
 # -*- coding: utf-8 - Python 3.5.1 *-
 """
 Description: Grab Time Series data From USGS Web Service
-Input(s)   : USGS Gages, Parameters
-Output(s)  : .rdb time series files
+Input(s)   : USGS & NOAA Gages, Parameters
+Output(s)  : time series files & directories
 slawler@dewberry.com
 Created on Tue Apr 19 15:08:33 2016
 """
